@@ -6,16 +6,27 @@
 using namespace app;
 using namespace net;
 
-void thrd_send_cmd(PressClient* pc) {
+void thrd_send(PressClient* pc) {
 	while(1) {
 		sleep(1);
-		pc->set();
+		if(-1 == pc->set()) {
+			pc->reconnect(3);
+		}
 	}
 }
 
-void thrd_recv_data(PressClient* pc) {
-	pc->wait();
-	pc->notice();
+void thrd_wait(PressClient* pc) {
+	while(1) {
+		if(-1 == pc->wait()) {
+			sleep(1);
+		}
+
+	}	
+}
+
+void thrd_notice(PressClient* pc) {
+	while(1)
+		pc->notice();
 }	
 
 int main() {
@@ -23,11 +34,10 @@ int main() {
 	std::cout << "hello!" << std::endl;
 	PressClient pc("192.168.1.66");
 	
-	std::thread thrd_send(thrd_send_cmd, &pc);
-	std::thread thrd_recv(thrd_recv_data, &pc);
-	thrd_send.detach();
-	thrd_recv.detach();
-
+	std::thread t_send(thrd_send, &pc);
+	std::thread t_wait(thrd_wait, &pc);
+	std::thread t_notice(thrd_notice, &pc);
+	
 	while(1) {
 		sleep(1);
 	}

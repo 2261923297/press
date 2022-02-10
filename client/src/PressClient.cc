@@ -19,7 +19,9 @@ uint32_t get_press(const void* buffer, uint32_t size) {
 PressClient::PressClient(const char* addr) {
 	m_path.reset();
 	m_sock.reset();
-	this->connect(addr);
+	if(-1 == this->connect(addr)) {
+		reconnect(3);
+	}
 
 	m_sem.reset(new thread::Semaphore(0));
 }
@@ -33,7 +35,9 @@ bool PressClient::connect(const char* addr)  {
 	m_path = net::Path::ptr(new net::Path(addr));
 	
 	m_sock = net::Socket::ptr(new net::Socket(AF_INET, SOCK_STREAM, 0));
-	return m_sock->connect(*m_path);
+	int ret = m_sock->connect(*m_path);
+	printf("ret = %d", ret);
+	return ret;
 
 }
 
@@ -44,8 +48,13 @@ bool PressClient::close()  {
 
 
 bool PressClient::set()  {
-	int ret = m_sock->send(s_cmdSet, 5);
-	ret &= m_sock->send(m_setPressVal, 3);
+	char send[8] = { 0 };
+	memcpy(send, s_cmdSet, 5);
+	memcpy(send + 5, m_setPressVal, 3);
+	int ret = m_sock->send(send, 8);
+	if(-1 == ret) {
+		reconnect(3);
+	}
 	return ret;
 }
 
@@ -54,23 +63,35 @@ bool PressClient::get()  {
 }
 
 void PressClient::notice() {
-	m_sem->wait();
-	printf("压力: 0x%u\n", get_press(GetPress(), 3));
+	while(1) { 
+		m_sem->wait();
+		usleep(5);
+		printf("压力: 0x%u\n", get_press(GetPress(), 3));
+	}
+
 }
 
-void PressClient::reconnect(int n_times) {
+bool PressClient::reconnect(int n_times) {
+	printf("reconnect... \n");
 	int n = n_times;
+	m_sock->close();
 	while(n_times--) {
-		if(-1 == m_sock->connect(*m_path)) {
+		std::cout << "reconnect path: " << m_path->getStr() << std::endl;
+		int ret = m_sock->connect(*m_path);
+		printf("ret = %d", ret);
+		if(ret == false) {
+			printf("重连失败, 再次尝试...");
 			continue;
 		} else {
-			return;
+			return true;
 		}
 	}
+	sleep(1);
 	printf("重连 %d 次失败\n", n);
+	return false;
 }
 
-void thrd_wait(net::Socket::ptr m_sock, thread::Semaphore::ptr sem) {
+bool PressClient::wait()  {
 	const size_t b_size = 8;
 	char buffer[b_size] = { 0 };
 	uint32_t n_recv;
@@ -80,9 +101,10 @@ void thrd_wait(net::Socket::ptr m_sock, thread::Semaphore::ptr sem) {
 		memset(buffer, 0, b_size);
 		n_recv = m_sock->recv(buffer, b_size);
 
-		if(-1 == n_recv) {
-			printf("ERROR %d", __LINE__);
-			return;
+		if(0 == n_recv || -1 == n_recv) {
+			printf("ERROR line: %d\n", __LINE__);
+			reconnect(3);
+			return false;
 		}
 		std::cout << "nRecv: " << n_recv << ": ";
 		for(int i = 0; buffer[i] != 0; i++) {
@@ -91,15 +113,9 @@ void thrd_wait(net::Socket::ptr m_sock, thread::Semaphore::ptr sem) {
 		printf("\n");
 		if(n_recv == 3) {
 			PressClient::SetPress(buffer);
-			sem->post();						// 释放信号
+			m_sem->post();						// 释放信号
 		}
 	}
-	return;
-}
-
-bool PressClient::wait()  {
-	std::thread thrd_recv_press(this, thrd_wait, m_sock, m_sem);
-	thrd_recv_press.detach();
 
 	return true;
 }

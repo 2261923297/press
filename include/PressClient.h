@@ -25,7 +25,7 @@ public:
 
 	void notice();
 	void setPress(char press[3]) { memcpy(m_setPressVal, press, 3); }
-	void reconnect(int n_times);
+	bool reconnect(int n_times);
 	void handleNetError();
 public:
 	static const char* GetPress() { return s_rtPress; }
@@ -45,6 +45,7 @@ private:
 }; // PressClient;
 const char PressClient::s_cmdSet[5] = { 0x53, 0x4F, 0x55, 0x52, 0x20 };
 const char PressClient::s_cmdGet[5] = { 0x53, 0x4F, 0x55, 0x52, 0x4F };
+char PressClient::s_rtPress[3] = { 0 };
 } // namespace app
 
 

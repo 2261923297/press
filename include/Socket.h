@@ -19,6 +19,7 @@ public:
 	in_addr_t getAddr() const { return inet_addr(m_pathStr.c_str()); }
 	uint16_t getPort() const { return htons(m_port); }
 
+	const std::string& getStr() const { return m_pathStr; }
 private:
 
 	std::string m_pathStr;
@@ -30,7 +31,7 @@ public:
 	typedef std::shared_ptr<Socket> ptr;
 	Socket(int domain, int type, int protocol);
 	virtual ~Socket();
-	void close() { ::close(m_sock); m_sock = 0; }
+	void close();
 
 	bool bind(const net::Path& p);
 	bool connect(const net::Path& p);
