@@ -1,0 +1,4 @@
+#!/bin/bash
+
+g++ test_Socket.cc -I ../include -L ../lib -Wl,-rpath ../lib -lSocket
+./a.out

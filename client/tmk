@@ -1,0 +1,17 @@
+#!/bin/bash
+
+
+src_dir=./src
+include_dir=./include
+
+cmd=$1
+project_name=$2
+
+if [ "$1" = "vim" ]
+then 
+	vim $src_dir/$project_name.h $src_dir/$project_name.cc
+else
+	./mk/build_scripts $project_name
+fi
+
+
