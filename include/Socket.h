@@ -26,6 +26,22 @@ private:
 	uint16_t m_port;
 }; // class Path;
 
+class HandleError {
+	public:
+	typedef std::shared_ptr<HandleError> ptr;
+	HandleError() { }
+	virtual ~HandleError() { }
+
+	void work(int errnum, const char* file_name, const char* func_name, uint32_t line);
+
+protected:
+	virtual void handleError() { }
+
+private:
+
+}; // class HandleError
+
+
 class Socket {
 public:
 	typedef std::shared_ptr<Socket> ptr;
@@ -35,13 +51,19 @@ public:
 
 	bool bind(const net::Path& p);
 	bool connect(const net::Path& p);
-	Socket* accept();
-	void listen(uint32_t n);
+	bool reconnect(size_t size);
 	uint32_t send(const void* buffer, uint32_t size);
 	uint32_t recv(void* buffer, uint32_t size);
 	
+	Socket* accept();
+	bool listen(uint32_t n);
+
+	void setHandleError(HandleError::ptr he) { m_handleError = he; }
+
 	void shutdown();    // send empty packet to shutdown
 	void onShutdown();  // recv empty packet call this func to sure;
+protected:
+	void handleError(const char* func_name, int ret, int line);
 
 private:
 
@@ -51,6 +73,7 @@ private:
 
 	net::Path::ptr m_path;
 	int m_sock;
+	HandleError::ptr m_handleError;
 
 }; //class Socket;
 

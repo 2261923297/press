@@ -9,7 +9,19 @@
 
 
 namespace app {
+class PressClient;
 
+class PressHandleError : public net::HandleError {
+public:
+	typedef std::shared_ptr<PressHandleError> ptr;
+	PressHandleError(PressClient* pc) { m_pc = pc; }
+protected:
+	virtual void handleError() override;
+
+private:
+	PressClient* m_pc;
+
+}; // class PressHandleError
 class PressClient : public Client {
 public:
 	typedef std::shared_ptr<PressClient> ptr;
@@ -25,8 +37,8 @@ public:
 
 	void notice();
 	void setPress(char press[3]) { memcpy(m_setPressVal, press, 3); }
-	bool reconnect(int n_times);
-	void handleNetError();
+	bool reconnect(int n_times = 3);
+
 public:
 	static const char* GetPress() { return s_rtPress; }
 
@@ -39,6 +51,7 @@ private:
 
 	char		m_setPressVal[3];
 
+	PressHandleError::ptr m_handleError;
 	static char s_rtPress[3];
 	static const char s_cmdGet[5];
 	static const char s_cmdSet[5];

@@ -3,7 +3,7 @@
 clear
 
 src_name=$1
-root=~/cpp/
+root=~/cpp/dev/
 
 bin=$root\bin/
 inc=$root\include/
