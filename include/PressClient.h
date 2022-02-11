@@ -1,6 +1,7 @@
 #include "Socket.h"
 #include "Client.h"
 #include "Semaphore.h"
+#include "Mutex.h"
 
 
 #include <stdio.h>
@@ -22,6 +23,7 @@ private:
 	PressClient* m_pc;
 
 }; // class PressHandleError
+
 class PressClient : public Client {
 public:
 	typedef std::shared_ptr<PressClient> ptr;
@@ -36,13 +38,25 @@ public:
 	virtual bool wait() override;
 
 	void notice();
-	void setPress(char press[3]) { memcpy(m_setPressVal, press, 3); }
+	void setPress(char press[3]) { 
+		thread::Mutex mutex;
+		memcpy(m_setPressVal, press, 3); 
+	}
+
 	bool reconnect(int n_times = 3);
 
 public:
-	static const char* GetPress() { return s_rtPress; }
+	static const char* GetPress() { 
+		thread::Mutex mutex;
+		const char* rt = s_rtPress; 
+		return rt;
+	}
 
-	static void SetPress(const char* press) { memcpy(s_rtPress, press, 3); }	
+	static void SetPress(const char* press) { 
+		thread::Mutex mutex;
+		memcpy(s_rtPress, press, 3); 
+	
+	}	
 
 private:
 	net::Path::ptr m_path;

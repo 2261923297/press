@@ -20,6 +20,7 @@ public:
 	uint16_t getPort() const { return htons(m_port); }
 
 	const std::string& getStr() const { return m_pathStr; }
+	uint16_t getLocalPort() const { return m_port; }
 private:
 
 	std::string m_pathStr;

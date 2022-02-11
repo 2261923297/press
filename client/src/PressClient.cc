@@ -26,6 +26,7 @@ PressClient::PressClient(const char* addr) {
 	m_sock.reset();
 	m_handleError = PressHandleError::ptr(new PressHandleError(this));
 	if(-1 == this->connect(addr)) {
+		print_log("PressClinet:");
 		reconnect(3);
 	}
 
@@ -72,8 +73,8 @@ bool PressClient::get()  {
 void PressClient::notice() {
 	while(1) { 
 		m_sem->wait();
-		usleep(5);
-		printf("压力: 0x%u\n", get_press(GetPress(), 3));
+	//	usleep(5);
+		printf("压力: 0x%x\n", get_press(GetPress(), 3));
 	}
 
 }
@@ -82,10 +83,9 @@ bool PressClient::reconnect(int n_times) {
 	printf("reconnect... \n");
 	int n = n_times;
 	m_sock->close();
-
 	m_sock->reconnect(n_times);
 
-	printf("重连 %d 次失败\n", n);
+	printf("重连 %d 秒失败\n", n);
 	return false;
 }
 
@@ -106,6 +106,7 @@ bool PressClient::wait()  {
 		printf("\n");
 		if(n_recv == 3) {
 			PressClient::SetPress(buffer);
+			
 			m_sem->post();						// 释放信号
 		}
 	}

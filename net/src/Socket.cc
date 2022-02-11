@@ -1,19 +1,11 @@
 #include "Socket.h"
+#include "util.h"
+
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <errno.h>
 #include <string.h>
 
-static char g_error_buffer[256] = { 0 };
-#define print_err(val) \
-	do {									\
-		if(val <= 0) {						\
-			memset(g_error_buffer, 0, 256);		\
-			sprintf(g_error_buffer, "[ERROR] %d, %d: %s\n", errno, __LINE__, strerror(errno));	 \
-			printf("%s", g_error_buffer);		\
-		}									\
-	} while(0)
-	
 namespace net {
 
 Path::Path(const std::string& path_str, uint16_t port) { 
@@ -49,7 +41,7 @@ void Socket::close() {
 
 
 void Socket::handleError(const char* func_name, int ret, int line) {
-	if(-1 == ret) {
+	if(-1 == ret || 0 == ret) {
 		m_handleError->work(errno, __FILE__, func_name, line);
 	}
 }
@@ -80,8 +72,8 @@ bool Socket::connect(const net::Path& p) {
 
 	if(0 != m_sock) {
 		this->close();
-		m_sock = socket(m_domain, m_type, m_protocol);
 	}
+	m_sock = socket(m_domain, m_type, m_protocol);
 
 	struct sockaddr_in  si;
 	si.sin_family = m_domain;
@@ -89,8 +81,10 @@ bool Socket::connect(const net::Path& p) {
 	si.sin_port = m_path->getPort();
 
 	int ret = ::connect(m_sock, (struct sockaddr*)&si, sizeof(si));
+	print_log("m_sock = %d, path: %s, port: %d"
+			, m_sock, m_path->getStr().c_str(), m_path->getLocalPort());
 	
-	handleError(__FUNCTION__,  ret, __LINE__);
+	handleError(__FUNCTION__,  ret + 1, __LINE__);
 	return  !!!ret;
 
 }
@@ -125,8 +119,10 @@ bool Socket::reconnect(size_t n_times) {
 	si.sin_addr.s_addr = m_path->getAddr();
 	si.sin_port = m_path->getPort();
 
+	uint64_t time_beg = cur_time_ms();
+	uint64_t time_wait = n_times * 1000;
 	int ret = -1;
-	while(n_times-- && -1 == ret)
+	while(time_wait > cur_time_ms() - time_beg && -1 == ret)
 		ret = ::connect(m_sock, (struct sockaddr*)&si, sizeof(si));
 	return !!!ret;
 }

@@ -27,6 +27,12 @@ static inline uint64_t cur_time_us();
 #define print_llu(val) \
 	printf("[info] %s:%d %s = %" PRIu64 "\n", __FILE__, __LINE__, #val, (val));	
 
+#define print_log(...) \
+	fprintf(stderr, "%s:%d:%s> ", __FILE__, __LINE__, __FUNCTION__);		\
+	fprintf(stderr, __VA_ARGS__);										\
+	fprintf(stderr, "\n");												\
+//
+
 static inline uint64_t 
 cur_time_us() {
 	struct timeval cur;

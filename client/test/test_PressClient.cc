@@ -1,4 +1,5 @@
 #include "PressClient.h"
+#include "util.h"
 #include <iostream>
 #include <thread>
 #include <unistd.h>
@@ -30,8 +31,8 @@ void thrd_notice(PressClient* pc) {
 }	
 
 int main() {
-
 	std::cout << "hello!" << std::endl;
+
 	PressClient pc("192.168.1.66");
 	
 	std::thread t_send(thrd_send, &pc);
