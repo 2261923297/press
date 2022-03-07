@@ -2,11 +2,10 @@
 #include "tools.h"
 #include "Socket.h"
 #include "AutoDebussy.h"
+#include "BoardController.h"
 
 using namespace senasic::sw::tt;
 
-namespace tt {
-namespace framework {
 
 InstrumentController::InstrumentController() {
 	m_sock.reset();
@@ -61,17 +60,17 @@ int AutoDebussy::init()
 		, config_dir + "N900_ip.txt");
 	getAddressFromFile(CMW500_ip
 		, config_dir + "CMW500_ip.txt");
+	getAddressFromFile(Board_COM
+		, config_dir + "Board_COM.txt");
 
-	//N900_cf = config_dir + "N900_test_items.txt";
 	CMW500_cf = config_dir + "CMW500_test_items.txt";
 	Board_cf = config_dir + "Board_test_items.txt";
-	getAddressFromFile(Board_COM, config_dir + "Board_COM.txt");
-//	std::cout << "board_ip: " << Board_ip << std::endl;
-//	m_N900_ctl = new N900Controller(N900_cf, N900_ip, 5025);
-//	CMW500_ip = "169.254."
+	
 	m_CMW500_ctl = new CMW500Controller(CMW500_cf, CMW500_ip, 5025);
 	m_board_ctl = new BoardController(Board_cf, Board_COM);
-
+	
+	m_CMW500_ctl->set_ad(this);
+	m_board_ctl->set_ad(this);
 	return 0;
 }
 
@@ -122,7 +121,6 @@ int AutoDebussy::tpl_friday()
 				__logger_error << "board_set \n";
 				return -1; 
 			}
-
 			if (cmw_set == 0) {
 				__logger_debug << "cmw_500 is end\n";
 				break;
@@ -130,8 +128,4 @@ int AutoDebussy::tpl_friday()
 		}
 	}
 	return 0;
-}
-
-
-}
 }

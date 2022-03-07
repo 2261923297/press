@@ -1,6 +1,5 @@
-#include "tools.h"
+#include "utils.h"
 #include <stdint.h>
-#include <qbytearray.h>
 #include <iostream>
 #include <vector>
 
@@ -40,11 +39,13 @@
 	return 0;
 }
 
+ /*
  void print_qbytearray(QByteArray qa) {
+	__logger_debug << "ByteArray:";
 	for (auto it : qa) { printf("0x%x, ", (unsigned char)it); }
 	printf("\n");
 }
-
+*/
  void CharToHex(const uint8_t& data, uint8_t buf[2]) {
 	buf[1] = (uint8_t)(data & 0x0F);
 	buf[0] = (uint8_t)((data & 0xF0) >> 4);
@@ -53,6 +54,7 @@
 	buf[1] = IntIoCharHex(buf[1]);
 
 }
+
 
  void ChHexToInt(const uint8_t hex, uint8_t& rt) {
 	if (hex >= '0' && hex <= '9') {
